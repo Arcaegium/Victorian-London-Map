@@ -4,23 +4,12 @@
   <title>Victorian London Map</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <style> #map { height: 100vh; margin: 0; padding: 0; } </style>
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; }
+    iframe { width: 100%; height: 100%; border: none; }
+  </style>
 </head>
 <body>
-  <div id="map"></div>
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script>
-    const map = L.map('map').setView([51.5074, -0.1278], 13);
-
-    L.tileLayer('https://nls-0.tileserver.com/nls/{z}/{x}/{y}.jpg', {
-      attribution: '&copy; <a href="https://maps.nls.uk/">National Library of Scotland</a>',
-      tileSize: 256,
-      minZoom: 6,
-      maxZoom: 18
-    }).addTo(map);
-
-    L.marker([51.515, -0.12]).addTo(map).bindPopup('Sample marker');
-  </script>
+  <iframe src="https://api.maptiler.com/tiles/uk-osgb10k1888/?key=YOUR_KEY_HERE"></iframe>
 </body>
 </html>
