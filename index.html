@@ -13,11 +13,11 @@
   <script>
     const map = L.map('map').setView([51.5074, -0.1278], 13); // Centered on London
 
-    L.tileLayer('https://geo.nls.uk/mapdata3/os/6_inch_gb/{z}/{x}/{y}.png', {
-      maxZoom: 17,
-      minZoom: 5,
+    L.tileLayer('https://nls-0.tileserver.com/nls/{z}/{x}/{y}.jpg', {
+      attribution: '&copy; <a href="https://maps.nls.uk/">National Library of Scotland</a>',
       tileSize: 256,
-      attribution: '&copy; <a href="https://maps.nls.uk/">National Library of Scotland</a>'
+      minZoom: 6,
+      maxZoom: 18
     }).addTo(map);
 
     L.marker([51.515, -0.12]).addTo(map).bindPopup('Sample marker');
