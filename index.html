@@ -1,15 +1,89 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Victorian London Map</title>
+  <title>Victorian London Map (Interactive)</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
+  
   <style>
-    html, body { margin: 0; padding: 0; height: 100%; }
-    iframe { width: 100%; height: 100%; border: none; }
+    html, body, #map { height: 100%; margin: 0; padding: 0; }
+    .leaflet-top.leaflet-right { top: 70px; }
+    #exportBtn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 1000;
+      padding: 6px 10px;
+      background: white;
+      border: 1px solid #666;
+      font-size: 14px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
-  <iframe width="500" height="300" src="https://api.maptiler.com/tiles/uk-osgb10k1888/?key=r0HKkxDJMfqlCVzaro7d#14.3/55.76408/-3.01025"></iframe>
+
+  <div id="map"></div>
+  <button id="exportBtn" onclick="exportGeoJSON()">Export GeoJSON</button>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
+
+  <script>
+    const map = L.map('map').setView([51.5074, -0.1278], 13);
+
+    // Load MapTiler historic tiles using your valid API key
+    L.tileLayer('https://api.maptiler.com/tiles/uk-osgb10k1888/{z}/{x}/{y}.jpg?key=r0HKkxDJMfqlCVzaro7d', {
+      tileSize: 256,
+      minZoom: 0,
+      maxZoom: 18,
+      attribution: '&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> &copy; <a href="https://maps.nls.uk/">NLS</a>'
+    }).addTo(map);
+
+    // Drawing tools and feature group
+    const drawnItems = new L.FeatureGroup();
+    map.addLayer(drawnItems);
+
+    const drawControl = new L.Control.Draw({
+      edit: { featureGroup: drawnItems },
+      draw: {
+        polygon: true,
+        polyline: true,
+        rectangle: true,
+        marker: true,
+        circle: false,
+        circlemarker: false
+      }
+    });
+    map.addControl(drawControl);
+
+    map.on(L.Draw.Event.CREATED, e => {
+      drawnItems.addLayer(e.layer);
+    });
+
+    // Export function
+    function exportGeoJSON() {
+      const data = drawnItems.toGeoJSON();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'data.geojson';
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Try to load existing data.geojson
+    fetch('data.geojson')
+      .then(response => response.ok ? response.json() : null)
+      .then(data => {
+        if (data) {
+          L.geoJSON(data).eachLayer(layer => drawnItems.addLayer(layer));
+        }
+      });
+  </script>
 </body>
 </html>
