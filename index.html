@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.awesome-markers@2.0.4/dist/leaflet.awesome-markers.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+  <link rel="stylesheet" href="https://unpkg.com/font-awesome@4.7.0/css/font-awesome.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-measure@3.3.0/dist/leaflet-measure.css" />
   <style>
     html, body, #map { height: 100%; margin: 0; padding: 0; }
@@ -37,6 +37,20 @@
       font-size: 18px;
       line-height: 22px;
     }
+    .legend {
+      background: white;
+      padding: 6px 8px;
+      font: 14px Arial, sans-serif;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      line-height: 24px;
+    }
+    .legend i {
+      width: 16px;
+      height: 16px;
+      float: left;
+      margin-right: 8px;
+      opacity: 0.7;
+    }
   </style>
 </head>
 <body>
@@ -56,7 +70,7 @@
   <div id="map"></div>
   <button id="exportBtn" onclick="exportGeoJSON()">Export GeoJSON</button>
 
-  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet.awesome-markers@2.0.4/dist/leaflet.awesome-markers.js"></script>
   <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/leaflet-measure@3.3.0/dist/leaflet-measure.min.js"></script>
@@ -118,31 +132,18 @@
     map.on(L.Draw.Event.CREATED, e => {
       if (e.layerType === 'marker') {
         const typeSelector = document.getElementById('typeSelector');
-        if (!typeSelector || !typeSelector.value.trim()) {
-          alert("You must select a marker type before placing it.");
-          return;
-        }
-
+        if (!typeSelector || !typeSelector.value.trim()) return;
         const label = prompt("Enter a label or description for this marker:") || '';
         const type = typeSelector.value.trim().toLowerCase();
         const icon = getMarkerStyle(type);
         const latlng = e.layer.getLatLng();
         const marker = L.marker(latlng, { icon });
-
         if (label.trim() !== '') marker.bindPopup(label);
-
         marker.feature = {
           type: 'Feature',
-          properties: {
-            popupContent: label,
-            markerType: type
-          },
-          geometry: {
-            type: 'Point',
-            coordinates: [latlng.lng, latlng.lat]
-          }
+          properties: { popupContent: label, markerType: type },
+          geometry: { type: 'Point', coordinates: [latlng.lng, latlng.lat] }
         };
-
         drawnItems.addLayer(marker);
       } else {
         drawnItems.addLayer(e.layer);
@@ -165,7 +166,6 @@
           }
         });
       });
-
       const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -192,6 +192,21 @@
           }).eachLayer(layer => drawnItems.addLayer(layer));
         }
       });
+
+    const legend = L.control({ position: 'bottomright' });
+    legend.onAdd = function () {
+      const div = L.DomUtil.create('div', 'info legend');
+      div.innerHTML += '<i style="background: cadetblue"></i> Alchemicals<br>';
+      div.innerHTML += '<i style="background: blue"></i> Campsite<br>';
+      div.innerHTML += '<i style="background: red"></i> Concern<br>';
+      div.innerHTML += '<i style="background: purple"></i> Contact / Doctor<br>';
+      div.innerHTML += '<i style="background: darkgreen"></i> District<br>';
+      div.innerHTML += '<i style="background: green"></i> Performance Site<br>';
+      div.innerHTML += '<i style="background: orange"></i> Rumor Mill<br>';
+      div.innerHTML += '<i style="background: darkred"></i> Ward<br>';
+      return div;
+    };
+    legend.addTo(map);
   </script>
 </body>
 </html>
