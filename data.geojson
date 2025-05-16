@@ -216,19 +216,21 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -0.187111,
-          51.503894
+          -0.177476,
+          51.500969
         ]
       }
     },
     {
       "type": "Feature",
-      "properties": {},
+      "properties": {
+        "popupContent": "Kensington"
+      },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -0.177476,
-          51.500969
+          -0.187669,
+          51.503814
         ]
       }
     }
