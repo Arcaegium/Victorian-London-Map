@@ -101,32 +101,38 @@
     }
 
     map.on(L.Draw.Event.CREATED, e => {
-      if (e.layerType === 'marker') {
-        const label = prompt("Enter a label or description for this marker:") || '';
-        const type = document.getElementById('typeSelector').value.toLowerCase();
-        const icon = getMarkerStyle(type);
-        const latlng = e.layer.getLatLng();
-        const marker = L.marker(latlng, { icon });
+  if (e.layerType === 'marker') {
+    const typeSelector = document.getElementById('typeSelector');
+    if (!typeSelector || !typeSelector.value.trim()) {
+      alert("You must select a marker type before placing it.");
+      return;
+    }
 
-        if (label.trim() !== '') marker.bindPopup(label);
+    const label = prompt("Enter a label or description for this marker:") || '';
+    const type = typeSelector.value.trim().toLowerCase();
+    const icon = getMarkerStyle(type);
+    const latlng = e.layer.getLatLng();
+    const marker = L.marker(latlng, { icon });
 
-        marker.feature = {
-          type: 'Feature',
-          properties: {
-            popupContent: label,
-            markerType: type
-          },
-          geometry: {
-            type: 'Point',
-            coordinates: [latlng.lng, latlng.lat]
-          }
-        };
+    if (label.trim() !== '') marker.bindPopup(label);
 
-        drawnItems.addLayer(marker);
-      } else {
-        drawnItems.addLayer(e.layer);
+    marker.feature = {
+      type: 'Feature',
+      properties: {
+        popupContent: label,
+        markerType: type
+      },
+      geometry: {
+        type: 'Point',
+        coordinates: [latlng.lng, latlng.lat]
       }
-    });
+    };
+
+    drawnItems.addLayer(marker);
+  } else {
+    drawnItems.addLayer(e.layer);
+  }
+});
 
     function exportGeoJSON() {
       const json = drawnItems.toGeoJSON();
