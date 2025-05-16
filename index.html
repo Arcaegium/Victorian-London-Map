@@ -4,10 +4,10 @@
   <title>Victorian London Map (Interactive)</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- Leaflet core --> <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-<!-- Leaflet Draw --> <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
-<!-- Leaflet Awesome Markers --> <link rel="stylesheet" href="https://unpkg.com/leaflet.awesome-markers@2.0.4/dist/leaflet.awesome-markers.css" />
-<!-- Font Awesome 4.7 --> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.awesome-markers@2.0.4/dist/leaflet.awesome-markers.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
   <style>
     html, body, #map { height: 100%; margin: 0; padding: 0; }
     .leaflet-top.leaflet-right { top: 70px; }
@@ -22,7 +22,7 @@
       font-size: 14px;
       cursor: pointer;
     }
-    #typeSelector {
+    #typeSelector, #visibilityToggle {
       position: absolute;
       top: 10px;
       left: 60px;
@@ -31,11 +31,9 @@
       border: 1px solid #666;
       padding: 5px;
       font-size: 14px;
+      margin-right: 10px;
     }
-    .awesome-marker i {
-      font-size: 18px;
-      line-height: 22px;
-    }
+    #visibilityToggle { left: 200px; }
     .legend {
       background: white;
       padding: 6px 8px;
@@ -66,13 +64,17 @@
     <option value="rumor mill">rumor mill</option>
     <option value="ward">ward</option>
   </select>
+  <select id="visibilityToggle">
+    <option value="public">Public</option>
+    <option value="private">Private</option>
+  </select>
   <div id="map"></div>
   <button id="exportBtn" onclick="exportGeoJSON()">Export GeoJSON</button>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet.awesome-markers@2.0.4/dist/leaflet.awesome-markers.js"></script>
   <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
-  
+
   <script>
     const map = L.map('map').setView([51.5074, -0.1278], 13);
 
@@ -83,27 +85,15 @@
       attribution: '&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> &copy; <a href="https://maps.nls.uk/">NLS</a>'
     }).addTo(map);
 
-    L.control.scale({
-      metric: true,
-      imperial: false,
-      maxWidth: 200
+    L.control.scale({ metric: true, imperial: false, maxWidth: 200 }).addTo(map);
+
+    const publicMarkers = L.layerGroup().addTo(map);
+    const privateMarkers = L.layerGroup();
+
+    L.control.layers(null, {
+      'Public Markers': publicMarkers,
+      'Private Markers': privateMarkers
     }).addTo(map);
-
-    const drawnItems = new L.FeatureGroup();
-    map.addLayer(drawnItems);
-
-    const drawControl = new L.Control.Draw({
-      edit: { featureGroup: drawnItems },
-      draw: {
-        polygon: true,
-        polyline: true,
-        rectangle: true,
-        marker: true,
-        circle: false,
-        circlemarker: false
-      }
-    });
-    map.addControl(drawControl);
 
     const markerStyles = {
       'alchemicals':   { icon: 'flask', markerColor: 'cadetblue' },
@@ -128,41 +118,26 @@
 
     map.on(L.Draw.Event.CREATED, e => {
       if (e.layerType === 'marker') {
-        const typeSelector = document.getElementById('typeSelector');
-        if (!typeSelector || !typeSelector.value.trim()) return;
-        const label = prompt("Enter a label or description for this marker:") || '';
-        const type = typeSelector.value.trim().toLowerCase();
+        const type = document.getElementById('typeSelector').value.trim().toLowerCase();
+        const isPublic = document.getElementById('visibilityToggle').value === 'public';
+        const label = prompt('Enter a label or description for this marker:') || '';
         const icon = getMarkerStyle(type);
         const latlng = e.layer.getLatLng();
         const marker = L.marker(latlng, { icon });
-        if (label.trim() !== '') marker.bindPopup(label);
+        if (label.trim()) marker.bindPopup(label);
+
         marker.feature = {
           type: 'Feature',
-          properties: { popupContent: label, markerType: type },
+          properties: { popupContent: label, markerType: type, visibility: isPublic ? 'public' : 'private' },
           geometry: { type: 'Point', coordinates: [latlng.lng, latlng.lat] }
         };
-        drawnItems.addLayer(marker);
-      } else {
-        drawnItems.addLayer(e.layer);
+
+        (isPublic ? publicMarkers : privateMarkers).addLayer(marker);
       }
     });
 
     function exportGeoJSON() {
-      const json = drawnItems.toGeoJSON();
-      json.features.forEach(f => {
-        drawnItems.eachLayer(layer => {
-          if (layer instanceof L.Marker) {
-            const latlng = layer.getLatLng();
-            const [lng, lat] = f.geometry.coordinates;
-            const samePoint = Math.abs(latlng.lat - lat) < 0.00001 && Math.abs(latlng.lng - lng) < 0.00001;
-            if (samePoint) {
-              const popup = layer.getPopup();
-              if (popup) f.properties.popupContent = popup.getContent();
-              f.properties.markerType = layer.feature?.properties?.markerType || "default";
-            }
-          }
-        });
-      });
+      const json = publicMarkers.toGeoJSON();
       const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -178,7 +153,7 @@
         if (data) {
           L.geoJSON(data, {
             pointToLayer: (feature, latlng) => {
-              const icon = getMarkerStyle((feature.properties.markerType || "default").toLowerCase());
+              const icon = getMarkerStyle((feature.properties.markerType || 'default').toLowerCase());
               const marker = L.marker(latlng, { icon });
               if (feature.properties && feature.properties.popupContent) {
                 marker.bindPopup(feature.properties.popupContent);
@@ -186,42 +161,25 @@
               marker.feature = feature;
               return marker;
             }
-          }).eachLayer(layer => drawnItems.addLayer(layer));
+          }).eachLayer(layer => publicMarkers.addLayer(layer));
         }
       });
 
-   const legend = L.control({ position: 'bottomright' });
-
-  legend.onAdd = function () {
-    const div = L.DomUtil.create('div', 'legend');
-    const entries = {
-      'alchemicals': { icon: 'flask', color: 'cadetblue' },
-      'campsite': { icon: 'home', color: 'blue' },
-      'concern': { icon: 'exclamation-triangle', color: 'red' },
-      'contact': { icon: 'user', color: 'purple' },
-      'district': { icon: 'flag-o', color: 'darkgreen' },
-      'doctor': { icon: 'plus-square', color: 'purple' },
-      'electriques': { icon: 'tachometer', color: 'cadetblue' },
-      'mechaniques': { icon: 'cogs', color: 'cadetblue' },
-      'performance site': { icon: 'star', color: 'green' },
-      'rumor mill': { icon: 'comments-o', color: 'orange' },
-      'ward': { icon: 'shield', color: 'darkred' }
+    const legend = L.control({ position: 'bottomright' });
+    legend.onAdd = function () {
+      const div = L.DomUtil.create('div', 'legend');
+      const entries = markerStyles;
+      for (const key in entries) {
+        const { icon, markerColor } = entries[key];
+        div.innerHTML +=
+          `<div style="margin-bottom:4px;">
+            <i class="fa fa-${icon}" style="color:white; background:${markerColor}; border-radius:50%; width:22px; height:22px; line-height:22px; text-align:center; display:inline-block;"></i>
+            ${key}
+          </div>`;
+      }
+      return div;
     };
-  
-    for (const key in entries) {
-      const { icon, color } = entries[key];
-      div.innerHTML +=
-        `<div style="margin-bottom:4px;">
-          <i class="fa fa-${icon}" style="color:white; background:${color}; border-radius:50%; width:22px; height:22px; line-height:22px; text-align:center; display:inline-block;"></i>
-          ${key}
-        </div>`;
-    }
-  
-    return div;
-  };
-  
-  legend.addTo(map);
-
+    legend.addTo(map);
   </script>
 </body>
 </html>
