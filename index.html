@@ -57,7 +57,7 @@
   <button id="exportBtn" onclick="exportGeoJSON()">Export GeoJSON</button>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.awesome-markers/2.0.4/leaflet.awesome-markers.js"></script>
+  <script src="https://unpkg.com/leaflet.awesome-markers@2.0.4/dist/leaflet.awesome-markers.js"></script>
   <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
   
   <script>
@@ -105,7 +105,12 @@
       console.log("getMarkerStyle input:", key, "resolved style:", markerStyles[key]);
       const style = markerStyles[key];
       console.log("getMarkerStyle final:", { key, style, hasIcon: style.hasOwnProperty('icon') });
-      console.log("Resolved icon:", style.icon, "Resolved color:", style.markerColor);
+      console.log(
+        "Resolved icon:",
+        style?.icon ?? def.icon,
+        "Resolved color:",
+        style?.markerColor ?? def.markerColor
+      );
 
       return L.AwesomeMarkers.icon({ ...(style || def), prefix: 'fa' });
     }
