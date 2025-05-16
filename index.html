@@ -62,7 +62,7 @@
     <option value="mechaniques">mechaniques</option>
     <option value="performance site">performance site</option>
     <option value="rumor mill">rumor mill</option>
-    <option value="wardings">wardings</option>
+    <option value="ward">ward</option>
   </select>
   <div id="map"></div>
   <button id="exportBtn" onclick="exportGeoJSON()">Export GeoJSON</button>
@@ -97,17 +97,17 @@
     map.addControl(drawControl);
 
     const markerStyles = {
+      'alchemicals':   { icon: 'flask', markerColor: 'cadetblue' },
       'campsite':      { icon: 'home', markerColor: 'blue' },
+      'concern':       { icon: 'exclamation-triangle', markerColor: 'red' },
+      'contact':       { icon: 'user', markerColor: 'purple' },
+      'district':      { icon: 'flag-o', markerColor: 'darkgreen' },
+      'doctor':        { icon: 'plus-square', markerColor: 'purple' },
+      'electriques':   { icon: 'tachometer', markerColor: 'cadetblue' },
+      'mechaniques':   { icon: 'cogs', markerColor: 'cadetblue' },
       'performance site': { icon: 'star', markerColor: 'green' },
-      'concern':       { icon: 'exclamation-triangle', markerColor: 'darkred' },
-      'contact':       { icon: 'user', markerColor: 'darkgreen' },
       'rumor mill':    { icon: 'comments-o', markerColor: 'orange' },
-      'doctor':        { icon: 'plus-square', markerColor: 'blue' },
-      'electriques':   { icon: 'tachometer', markerColor: 'blue' },
-      'mechaniques':   { icon: 'cogs', markerColor: 'blue' },
-      'alchemicals':   { icon: 'flask', markerColor: 'blue' },
-      'wardings':      { icon: 'shield', markerColor: 'blue' },
-      'district':      { icon: 'flag-o', markerColor: 'blue' }
+      'ward':      { icon: 'shield', markerColor: 'darkred' }
     };
 
     function getMarkerStyle(type) {
