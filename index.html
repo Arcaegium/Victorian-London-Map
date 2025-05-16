@@ -22,11 +22,35 @@
       font-size: 14px;
       cursor: pointer;
     }
+    #typeSelector {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 1000;
+      background: white;
+      border: 1px solid #666;
+      padding: 5px;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
+  <select id="typeSelector">
+    <option value="campsite">Campsite</option>
+    <option value="performance site">Performance Site</option>
+    <option value="concern">Concern</option>
+    <option value="contact">Contact</option>
+    <option value="rumor mill">Rumor Mill</option>
+    <option value="doctor">Doctor</option>
+    <option value="electriques">Electriques</option>
+    <option value="mechaniques">Mechaniques</option>
+    <option value="alchemicals">Alchemicals</option>
+    <option value="wardings">Wardings</option>
+    <option value="district">District</option>
+  </select>
   <div id="map"></div>
   <button id="exportBtn" onclick="exportGeoJSON()">Export GeoJSON</button>
+
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.awesome-markers/2.0.4/leaflet.awesome-markers.js"></script>
@@ -56,26 +80,30 @@
     });
     map.addControl(drawControl);
 
+    const markerStyles = {
+      'campsite':      { icon: 'home', markerColor: 'blue' },
+      'performance site': { icon: 'ticket', markerColor: 'green' },
+      'concern':       { icon: 'exclamation-triangle', markerColor: 'darkred' },
+      'contact':       { icon: 'user', markerColor: 'darkgreen' },
+      'rumor mill':    { icon: 'comments-o', markerColor: 'orange' },
+      'doctor':        { icon: 'plus-square', markerColor: 'gray' },
+      'electriques':   { icon: 'tachometer', markerColor: 'purple' },
+      'mechaniques':   { icon: 'gears', markerColor: 'purple' },
+      'alchemicals':   { icon: 'flask', markerColor: 'purple' },
+      'wardings':      { icon: 'shield', markerColor: 'purple' },
+      'district':      { icon: 'flag-o', markerColor: 'purple' }
+    };
+
     function getMarkerStyle(type) {
-      switch ((type || "").toLowerCase()) {
-        case 'performance':
-          return L.AwesomeMarkers.icon({ icon: 'music', markerColor: 'blue', prefix: 'fa' });
-        case 'rumor':
-          return L.AwesomeMarkers.icon({ icon: 'comments', markerColor: 'green', prefix: 'fa' });
-        case 'hazard':
-          return L.AwesomeMarkers.icon({ icon: 'exclamation-triangle', markerColor: 'red', prefix: 'fa' });
-        case 'contact':
-          return L.AwesomeMarkers.icon({ icon: 'user', markerColor: 'orange', prefix: 'fa' });
-        default:
-          return L.AwesomeMarkers.icon({ icon: 'map-marker', markerColor: 'cadetblue', prefix: 'fa' });
-      }
+      const def = { icon: 'map-marker', markerColor: 'cadetblue' };
+      const style = markerStyles[type.toLowerCase()] || def;
+      return L.AwesomeMarkers.icon({ ...style, prefix: 'fa' });
     }
 
     map.on(L.Draw.Event.CREATED, e => {
       if (e.layerType === 'marker') {
         const label = prompt("Enter a label or description for this marker:") || '';
-        const typeInput = prompt("Enter a marker type (e.g., performance, rumor, hazard, contact):") || 'default';
-        const type = typeInput.trim().toLowerCase();
+        const type = document.getElementById('typeSelector').value;
         const icon = getMarkerStyle(type);
         const latlng = e.layer.getLatLng();
         const marker = L.marker(latlng, { icon });
