@@ -8,7 +8,6 @@
 <!-- Leaflet Draw --> <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
 <!-- Leaflet Awesome Markers --> <link rel="stylesheet" href="https://unpkg.com/leaflet.awesome-markers@2.0.4/dist/leaflet.awesome-markers.css" />
 <!-- Font Awesome 4.7 --> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
-<!-- Leaflet.MeasureControl (working, maintained fork) --> <link rel="stylesheet" href="https://unpkg.com/leaflet-measure-path@2.3.0/dist/leaflet-measure-path.css" />
   <style>
     html, body, #map { height: 100%; margin: 0; padding: 0; }
     .leaflet-top.leaflet-right { top: 70px; }
@@ -73,8 +72,7 @@
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet.awesome-markers@2.0.4/dist/leaflet.awesome-markers.js"></script>
   <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
-  <script src="https://unpkg.com/leaflet-measure/dist/leaflet-measure.js"></script>
-
+  
   <script>
     const map = L.map('map').setView([51.5074, -0.1278], 13);
 
@@ -85,11 +83,10 @@
       attribution: '&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> &copy; <a href="https://maps.nls.uk/">NLS</a>'
     }).addTo(map);
 
-    L.control.measure({
-      primaryLengthUnit: 'meters',
-      secondaryLengthUnit: 'kilometers',
-      activeColor: '#ABE67E',
-      completedColor: '#C8F2BE'
+    L.control.scale({
+      metric: true,
+      imperial: false,
+      maxWidth: 200
     }).addTo(map);
 
     const drawnItems = new L.FeatureGroup();
@@ -193,52 +190,38 @@
         }
       });
 
-    const legend = L.control({ position: 'bottomright' });
+   const legend = L.control({ position: 'bottomright' });
 
-    legend.onAdd = function () {
-      const div = L.DomUtil.create('div', 'legend');
-      const types = {
-        'alchemicals': 'flask',
-        'campsite': 'home',
-        'concern': 'exclamation-triangle',
-        'contact': 'user',
-        'district': 'flag-o',
-        'doctor': 'plus-square',
-        'electriques': 'tachometer',
-        'mechaniques': 'cogs',
-        'performance site': 'star',
-        'rumor mill': 'comments-o',
-        'ward': 'shield'
-      };
-    
-      const colors = {
-        'alchemicals': 'cadetblue',
-        'campsite': 'blue',
-        'concern': 'red',
-        'contact': 'purple',
-        'district': 'darkgreen',
-        'doctor': 'purple',
-        'electriques': 'cadetblue',
-        'mechaniques': 'cadetblue',
-        'performance site': 'green',
-        'rumor mill': 'orange',
-        'ward': 'darkred'
-      };
-    
-      for (const key in types) {
-        const iconHtml = L.AwesomeMarkers.icon({
-          icon: types[key],
-          markerColor: colors[key],
-          prefix: 'fa'
-        }).createIcon().outerHTML;
-    
-        div.innerHTML += `${iconHtml} ${key}<br>`;
-      }
-    
-      return div;
+  legend.onAdd = function () {
+    const div = L.DomUtil.create('div', 'legend');
+    const entries = {
+      'alchemicals': { icon: 'flask', color: 'cadetblue' },
+      'campsite': { icon: 'home', color: 'blue' },
+      'concern': { icon: 'exclamation-triangle', color: 'red' },
+      'contact': { icon: 'user', color: 'purple' },
+      'district': { icon: 'flag-o', color: 'darkgreen' },
+      'doctor': { icon: 'plus-square', color: 'purple' },
+      'electriques': { icon: 'tachometer', color: 'cadetblue' },
+      'mechaniques': { icon: 'cogs', color: 'cadetblue' },
+      'performance site': { icon: 'star', color: 'green' },
+      'rumor mill': { icon: 'comments-o', color: 'orange' },
+      'ward': { icon: 'shield', color: 'darkred' }
     };
-    
-    legend.addTo(map);
+  
+    for (const key in entries) {
+      const { icon, color } = entries[key];
+      div.innerHTML +=
+        `<div style="margin-bottom:4px;">
+          <i class="fa fa-${icon}" style="color:white; background:${color}; border-radius:50%; width:22px; height:22px; line-height:22px; text-align:center; display:inline-block;"></i>
+          ${key}
+        </div>`;
+    }
+  
+    return div;
+  };
+  
+  legend.addTo(map);
+
   </script>
 </body>
 </html>
