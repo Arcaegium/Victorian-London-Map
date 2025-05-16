@@ -50,19 +50,25 @@
   </style>
 </head>
 <body>
-  <select id="typeSelector">
-    <option value="alchemicals">alchemicals</option>
-    <option value="campsite">campsite</option>
-    <option value="concern">concern</option>
-    <option value="contact">contact</option>
-    <option value="district">district</option>
-    <option value="doctor">doctor</option>
-    <option value="electriques">electriques</option>
-    <option value="mechaniques">mechaniques</option>
-    <option value="performance site">performance site</option>
-    <option value="rumor mill">rumor mill</option>
-    <option value="ward">ward</option>
-  </select>
+  <div id="ownerControls" style="display:none;">
+    <select id="typeSelector">
+      <option value="alchemicals">alchemicals</option>
+      <option value="campsite">campsite</option>
+      <option value="concern">concern</option>
+      <option value="contact">contact</option>
+      <option value="district">district</option>
+      <option value="doctor">doctor</option>
+      <option value="electriques">electriques</option>
+      <option value="mechaniques">mechaniques</option>
+      <option value="performance site">performance site</option>
+      <option value="rumor mill">rumor mill</option>
+      <option value="ward">ward</option>
+    </select>
+    <select id="visibilityToggle">
+      <option value="public">Public</option>
+      <option value="private">Private</option>
+    </select>
+  </div>
   <select id="visibilityToggle">
     <option value="public">Public</option>
     <option value="private">Private</option>
@@ -77,6 +83,10 @@
   <script>
     const isOwner = new URLSearchParams(window.location.search).get('mode') === 'owner';
     const map = L.map('map').setView([51.5074, -0.1278], 13);
+
+    if (isOwner) {
+      document.getElementById('ownerControls').style.display = 'block';
+    }
 
     L.tileLayer('https://api.maptiler.com/tiles/uk-osgb10k1888/{z}/{x}/{y}.jpg?key=r0HKkxDJMfqlCVzaro7d', {
       tileSize: 256,
