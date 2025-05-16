@@ -164,6 +164,30 @@
       }
     });
 
+    if (isOwner) {
+      privateMarkers.eachLayer(layer => {
+        layer.on('click', () => {
+          const currentLabel = layer.getPopup()?.getContent() || '';
+          const newLabel = prompt('Edit label before publishing:', currentLabel);
+          if (newLabel === null) return; // cancel
+    
+          // Update popup content
+          if (newLabel.trim()) {
+            layer.bindPopup(newLabel.trim());
+            layer.feature.properties.popupContent = newLabel.trim();
+          }
+    
+          // Move to public layer
+          privateMarkers.removeLayer(layer);
+          publicMarkers.addLayer(layer);
+    
+          // Update visibility
+          if (!layer.feature.properties) layer.feature.properties = {};
+          layer.feature.properties.visibility = 'public';
+        });
+      });
+    }
+    
 function exportGeoJSON() {
   const allMarkers = new L.FeatureGroup();
   publicMarkers.eachLayer(layer => {
@@ -186,28 +210,50 @@ function exportGeoJSON() {
   URL.revokeObjectURL(url);
 }
 
-    fetch('data.geojson')
-      .then(response => response.ok ? response.json() : null)
-      .then(data => {
-        if (data) {
-          L.geoJSON(data, {
-            pointToLayer: (feature, latlng) => {
-              const visibility = feature.properties?.visibility || 'public';
-              const isPrivate = visibility === 'private';
-              if (isPrivate && !isOwner) return null;
+fetch('data.geojson')
+  .then(response => response.ok ? response.json() : null)
+  .then(data => {
+    if (data) {
+      L.geoJSON(data, {
+        pointToLayer: (feature, latlng) => {
+          const visibility = feature.properties?.visibility || 'public';
+          const isPrivate = visibility === 'private';
+          if (isPrivate && !isOwner) return null;
 
-              const icon = getMarkerStyle((feature.properties.markerType || 'default').toLowerCase());
-              const marker = L.marker(latlng, { icon });
-              if (feature.properties?.popupContent) marker.bindPopup(feature.properties.popupContent);
-              marker.feature = feature;
-              return marker;
-            }
-          }).eachLayer(layer => {
-            const isPrivate = layer.feature?.properties?.visibility === 'private';
-            (isPrivate ? privateMarkers : publicMarkers).addLayer(layer);
-          });
+          const icon = getMarkerStyle((feature.properties.markerType || 'default').toLowerCase());
+          const marker = L.marker(latlng, { icon });
+          if (feature.properties?.popupContent) marker.bindPopup(feature.properties.popupContent);
+          marker.feature = feature;
+          return marker;
+        }
+      }).eachLayer(layer => {
+        const isPrivate = layer.feature?.properties?.visibility === 'private';
+
+        if (isPrivate) {
+          privateMarkers.addLayer(layer);
+
+          if (isOwner) {
+            layer.on('click', () => {
+              const currentLabel = layer.getPopup()?.getContent() || '';
+              const newLabel = prompt('Edit label before publishing:', currentLabel);
+              if (newLabel === null) return;
+
+              if (newLabel.trim()) {
+                layer.bindPopup(newLabel.trim());
+                layer.feature.properties.popupContent = newLabel.trim();
+              }
+
+              privateMarkers.removeLayer(layer);
+              publicMarkers.addLayer(layer);
+              layer.feature.properties.visibility = 'public';
+            });
+          }
+        } else {
+          publicMarkers.addLayer(layer);
         }
       });
+    }
+  });
 
     const legend = L.control({ position: 'bottomright' });
     legend.onAdd = function () {
