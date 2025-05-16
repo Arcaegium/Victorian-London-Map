@@ -166,26 +166,22 @@
 
     if (isOwner) {
       privateMarkers.eachLayer(layer => {
-        layer.on('click', () => {
+       layer.on('contextmenu', () => {
           const currentLabel = layer.getPopup()?.getContent() || '';
           const newLabel = prompt('Edit label before publishing:', currentLabel);
-          if (newLabel === null) return; // cancel
-    
-          // Update popup content
+          if (newLabel === null) return;
+        
           if (newLabel.trim()) {
             layer.bindPopup(newLabel.trim());
             layer.feature.properties.popupContent = newLabel.trim();
           }
-    
-          // Move to public layer
+        
           privateMarkers.removeLayer(layer);
           publicMarkers.addLayer(layer);
-    
-          // Update visibility
-          if (!layer.feature.properties) layer.feature.properties = {};
           layer.feature.properties.visibility = 'public';
         });
       });
+      
     }
     
 function exportGeoJSON() {
