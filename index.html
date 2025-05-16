@@ -91,6 +91,22 @@
     const privateMarkers = L.layerGroup();
     if (isOwner) privateMarkers.addTo(map);
 
+    const drawControl = new L.Control.Draw({
+      edit: {
+        featureGroup: publicMarkers, // or change this if you want to allow edits on both groups
+        edit: isOwner
+      },
+      draw: {
+        polygon: true,
+        polyline: true,
+        rectangle: true,
+        marker: true,
+        circle: false,
+        circlemarker: false
+      }
+    });
+    map.addControl(drawControl);
+
     L.control.layers(null, {
       'Public Markers': publicMarkers,
       ...(isOwner ? { 'Private Markers': privateMarkers } : {})
