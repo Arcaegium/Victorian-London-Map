@@ -7,6 +7,7 @@
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.awesome-markers/2.0.4/leaflet.awesome-markers.css" />
 
   <style>
     html, body, #map { height: 100%; margin: 0; padding: 0; }
@@ -31,6 +32,7 @@
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.awesome-markers/2.0.4/leaflet.awesome-markers.js"></script>
 
   <script>
     const map = L.map('map').setView([51.5074, -0.1278], 13);
@@ -58,23 +60,54 @@
     });
     map.addControl(drawControl);
 
-    map.on(L.Draw.Event.CREATED, e => {
-      const layer = e.layer;
+    function getMarkerStyle(type) {
+      switch ((type || "").toLowerCase()) {
+        case 'performance':
+          return L.AwesomeMarkers.icon({ icon: 'music', markerColor: 'blue', prefix: 'fa' });
+        case 'rumor':
+          return L.AwesomeMarkers.icon({ icon: 'comments', markerColor: 'green', prefix: 'fa' });
+        case 'hazard':
+          return L.AwesomeMarkers.icon({ icon: 'exclamation-triangle', markerColor: 'red', prefix: 'fa' });
+        case 'contact':
+          return L.AwesomeMarkers.icon({ icon: 'user', markerColor: 'orange', prefix: 'fa' });
+        default:
+          return L.AwesomeMarkers.icon({ icon: 'map-marker', markerColor: 'cadetblue', prefix: 'fa' });
+      }
+    }
 
+    map.on(L.Draw.Event.CREATED, e => {
       if (e.layerType === 'marker') {
         const label = prompt("Enter a label or description for this marker:");
-        if (label) {
-          layer.bindPopup(label);
-        }
-      }
+        const type = prompt("Enter a marker type (e.g., performance, rumor, hazard, contact):");
 
-      drawnItems.addLayer(layer);
+        const icon = getMarkerStyle(type);
+        const latlng = e.layer.getLatLng();
+        const marker = L.marker(latlng, { icon });
+
+        if (label) marker.bindPopup(label);
+
+        // Store marker data as GeoJSON feature for export
+        marker.feature = {
+          type: 'Feature',
+          properties: {
+            popupContent: label,
+            markerType: type
+          },
+          geometry: {
+            type: 'Point',
+            coordinates: [latlng.lng, latlng.lat]
+          }
+        };
+
+        drawnItems.addLayer(marker);
+      } else {
+        drawnItems.addLayer(e.layer);
+      }
     });
 
     function exportGeoJSON() {
       const json = drawnItems.toGeoJSON();
 
-      // Inject popup content from each layer (if any)
       json.features.forEach(f => {
         drawnItems.eachLayer(layer => {
           if (layer instanceof L.Marker) {
@@ -83,9 +116,11 @@
             const samePoint =
               Math.abs(latlng.lat - lat) < 0.00001 &&
               Math.abs(latlng.lng - lng) < 0.00001;
-      
-            if (samePoint && layer.getPopup()) {
-              f.properties.popupContent = layer.getPopup().getContent();
+
+            if (samePoint) {
+              const popup = layer.getPopup();
+              if (popup) f.properties.popupContent = popup.getContent();
+              f.properties.markerType = layer.feature?.properties?.markerType || "default";
             }
           }
         });
@@ -106,12 +141,14 @@
       .then(data => {
         if (data) {
           L.geoJSON(data, {
-            onEachFeature: (feature, layer) => {
-              if (feature.geometry.type === 'Point' &&
-                  feature.properties &&
-                  feature.properties.popupContent) {
-                layer.bindPopup(feature.properties.popupContent);
+            pointToLayer: (feature, latlng) => {
+              const icon = getMarkerStyle(feature.properties.markerType || "default");
+              const marker = L.marker(latlng, { icon });
+              if (feature.properties && feature.properties.popupContent) {
+                marker.bindPopup(feature.properties.popupContent);
               }
+              marker.feature = feature;
+              return marker;
             }
           }).eachLayer(layer => drawnItems.addLayer(layer));
         }
