@@ -1,0 +1,19 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "popupContent": "Kensington",
+        "markerType": "district"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -0.186725,
+          51.504148
+        ]
+      }
+    }
+  ]
+}
