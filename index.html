@@ -164,19 +164,27 @@
       }
     });
 
-    function exportGeoJSON() {
-      const allMarkers = new L.FeatureGroup();
-      publicMarkers.eachLayer(layer => allMarkers.addLayer(layer));
-      privateMarkers.eachLayer(layer => allMarkers.addLayer(layer));
-      const json = allMarkers.toGeoJSON();
-      const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'data.geojson';
-      link.click();
-      URL.revokeObjectURL(url);
+function exportGeoJSON() {
+  const allMarkers = new L.FeatureGroup();
+  publicMarkers.eachLayer(layer => {
+    if (layer instanceof L.Marker && layer.feature) {
+      allMarkers.addLayer(layer);
     }
+  });
+  privateMarkers.eachLayer(layer => {
+    if (layer instanceof L.Marker && layer.feature) {
+      allMarkers.addLayer(layer);
+    }
+  });
+  const json = allMarkers.toGeoJSON();
+  const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'data.geojson';
+  link.click();
+  URL.revokeObjectURL(url);
+}
 
     fetch('data.geojson')
       .then(response => response.ok ? response.json() : null)
