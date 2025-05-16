@@ -99,7 +99,8 @@
       const def = { icon: 'map-marker', markerColor: 'cadetblue' };
       console.log("getMarkerStyle input:", key, "resolved style:", markerStyles[key]);
       const style = markerStyles[key];
-    
+      console.log("getMarkerStyle final:", { key, style, hasIcon: style.hasOwnProperty('icon') });
+      
       return L.AwesomeMarkers.icon({ ...(style || def), prefix: 'fa' });
     }
 
