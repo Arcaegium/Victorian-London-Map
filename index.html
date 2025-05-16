@@ -104,7 +104,14 @@
       const def = { icon: 'map-marker', markerColor: 'cadetblue' };
       console.log("getMarkerStyle input:", key, "resolved style:", markerStyles[key]);
       const style = markerStyles[key];
-      console.log("getMarkerStyle final:", { key, style, hasIcon: style.hasOwnProperty('icon') });
+      if (!style) {
+        console.warn(`Unknown marker type: '${key}' — falling back to default style.`);
+      }
+      console.log("getMarkerStyle final:", {
+        key,
+        style,
+        hasIcon: style?.hasOwnProperty('icon') ?? false
+      });
       console.log(
         "Resolved icon:",
         style?.icon ?? def.icon,
