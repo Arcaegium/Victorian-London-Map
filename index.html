@@ -129,7 +129,11 @@
 
         marker.feature = {
           type: 'Feature',
-          properties: { popupContent: label, markerType: type, visibility: isPublic ? 'public' : 'private' },
+          properties: {
+            popupContent: label,
+            markerType: type,
+            visibility: isPublic ? 'public' : 'private'
+          },
           geometry: { type: 'Point', coordinates: [latlng.lng, latlng.lat] }
         };
 
@@ -138,7 +142,10 @@
     });
 
     function exportGeoJSON() {
-      const json = publicMarkers.toGeoJSON();
+      const allMarkers = new L.FeatureGroup();
+      publicMarkers.eachLayer(layer => allMarkers.addLayer(layer));
+      privateMarkers.eachLayer(layer => allMarkers.addLayer(layer));
+      const json = allMarkers.toGeoJSON();
       const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -154,8 +161,10 @@
         if (data) {
           L.geoJSON(data, {
             pointToLayer: (feature, latlng) => {
-              const isPrivate = feature.properties?.visibility === 'private';
+              const visibility = feature.properties?.visibility || 'public';
+              const isPrivate = visibility === 'private';
               if (isPrivate && !isOwner) return null;
+
               const icon = getMarkerStyle((feature.properties.markerType || 'default').toLowerCase());
               const marker = L.marker(latlng, { icon });
               if (feature.properties?.popupContent) marker.bindPopup(feature.properties.popupContent);
