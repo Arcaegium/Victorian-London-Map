@@ -194,61 +194,51 @@
       });
 
     const legend = L.control({ position: 'bottomright' });
-ChatGPT said:
-Understood. You’re asking for two corrections:
 
-1. Legend Should Display Icons, Not Just Colors
-Replace your existing legend logic with one that uses the same icons and colors rendered by leaflet.awesome-markers. Here's an example:
-
-js
-Copy
-Edit
-const legend = L.control({ position: 'bottomright' });
-
-legend.onAdd = function () {
-  const div = L.DomUtil.create('div', 'legend');
-  const types = {
-    'alchemicals': 'flask',
-    'campsite': 'home',
-    'concern': 'exclamation-triangle',
-    'contact': 'user',
-    'district': 'flag-o',
-    'doctor': 'plus-square',
-    'electriques': 'tachometer',
-    'mechaniques': 'cogs',
-    'performance site': 'star',
-    'rumor mill': 'comments-o',
-    'ward': 'shield'
-  };
-
-  const colors = {
-    'alchemicals': 'cadetblue',
-    'campsite': 'blue',
-    'concern': 'red',
-    'contact': 'purple',
-    'district': 'darkgreen',
-    'doctor': 'purple',
-    'electriques': 'cadetblue',
-    'mechaniques': 'cadetblue',
-    'performance site': 'green',
-    'rumor mill': 'orange',
-    'ward': 'darkred'
-  };
-
-  for (const key in types) {
-    const iconHtml = L.AwesomeMarkers.icon({
-      icon: types[key],
-      markerColor: colors[key],
-      prefix: 'fa'
-    }).createIcon().outerHTML;
-
-    div.innerHTML += `${iconHtml} ${key}<br>`;
-  }
-
-  return div;
-};
-
-legend.addTo(map);
+    legend.onAdd = function () {
+      const div = L.DomUtil.create('div', 'legend');
+      const types = {
+        'alchemicals': 'flask',
+        'campsite': 'home',
+        'concern': 'exclamation-triangle',
+        'contact': 'user',
+        'district': 'flag-o',
+        'doctor': 'plus-square',
+        'electriques': 'tachometer',
+        'mechaniques': 'cogs',
+        'performance site': 'star',
+        'rumor mill': 'comments-o',
+        'ward': 'shield'
+      };
+    
+      const colors = {
+        'alchemicals': 'cadetblue',
+        'campsite': 'blue',
+        'concern': 'red',
+        'contact': 'purple',
+        'district': 'darkgreen',
+        'doctor': 'purple',
+        'electriques': 'cadetblue',
+        'mechaniques': 'cadetblue',
+        'performance site': 'green',
+        'rumor mill': 'orange',
+        'ward': 'darkred'
+      };
+    
+      for (const key in types) {
+        const iconHtml = L.AwesomeMarkers.icon({
+          icon: types[key],
+          markerColor: colors[key],
+          prefix: 'fa'
+        }).createIcon().outerHTML;
+    
+        div.innerHTML += `${iconHtml} ${key}<br>`;
+      }
+    
+      return div;
+    };
+    
+    legend.addTo(map);
   </script>
 </body>
 </html>
