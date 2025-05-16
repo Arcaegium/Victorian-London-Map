@@ -4,11 +4,9 @@
   <title>Victorian London Map (Interactive)</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.awesome-markers/2.0.4/leaflet.awesome-markers.css" />
-
   <style>
     html, body, #map { height: 100%; margin: 0; padding: 0; }
     .leaflet-top.leaflet-right { top: 70px; }
@@ -26,17 +24,14 @@
   </style>
 </head>
 <body>
-
   <div id="map"></div>
   <button id="exportBtn" onclick="exportGeoJSON()">Export GeoJSON</button>
-
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.awesome-markers/2.0.4/leaflet.awesome-markers.js"></script>
 
   <script>
     const map = L.map('map').setView([51.5074, -0.1278], 13);
-
     L.tileLayer('https://api.maptiler.com/tiles/uk-osgb10k1888/{z}/{x}/{y}.jpg?key=r0HKkxDJMfqlCVzaro7d', {
       tileSize: 256,
       minZoom: 0,
@@ -80,13 +75,12 @@
         const label = prompt("Enter a label or description for this marker:") || '';
         const typeInput = prompt("Enter a marker type (e.g., performance, rumor, hazard, contact):") || 'default';
         const type = typeInput.trim().toLowerCase();
-    
         const icon = getMarkerStyle(type);
         const latlng = e.layer.getLatLng();
         const marker = L.marker(latlng, { icon });
-    
+
         if (label.trim() !== '') marker.bindPopup(label);
-    
+
         marker.feature = {
           type: 'Feature',
           properties: {
@@ -98,7 +92,7 @@
             coordinates: [latlng.lng, latlng.lat]
           }
         };
-    
+
         drawnItems.addLayer(marker);
       } else {
         drawnItems.addLayer(e.layer);
@@ -107,16 +101,12 @@
 
     function exportGeoJSON() {
       const json = drawnItems.toGeoJSON();
-
       json.features.forEach(f => {
         drawnItems.eachLayer(layer => {
           if (layer instanceof L.Marker) {
             const latlng = layer.getLatLng();
             const [lng, lat] = f.geometry.coordinates;
-            const samePoint =
-              Math.abs(latlng.lat - lat) < 0.00001 &&
-              Math.abs(latlng.lng - lng) < 0.00001;
-
+            const samePoint = Math.abs(latlng.lat - lat) < 0.00001 && Math.abs(latlng.lng - lng) < 0.00001;
             if (samePoint) {
               const popup = layer.getPopup();
               if (popup) f.properties.popupContent = popup.getContent();
@@ -135,7 +125,6 @@
       URL.revokeObjectURL(url);
     }
 
-    // Load saved data.geojson if available
     fetch('data.geojson')
       .then(response => response.ok ? response.json() : null)
       .then(data => {
