@@ -95,12 +95,12 @@
     };
 
     function getMarkerStyle(type) {
-      const key = (type || '').toLowerCase();
+      const key = (type || '').toLowerCase().trim();
       const def = { icon: 'map-marker', markerColor: 'cadetblue' };
       const style = markerStyles[key];
     
       if (!style) {
-        console.error(`Unknown marker type: '${key}'`);
+        console.error(`Unknown marker type: '${key}' — using default`);
         return L.AwesomeMarkers.icon({ ...def, prefix: 'fa' });
       }
     
