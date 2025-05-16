@@ -77,16 +77,16 @@
 
     map.on(L.Draw.Event.CREATED, e => {
       if (e.layerType === 'marker') {
-        const label = prompt("Enter a label or description for this marker:");
-        const type = prompt("Enter a marker type (e.g., performance, rumor, hazard, contact):");
-
+        const label = prompt("Enter a label or description for this marker:") || '';
+        const typeInput = prompt("Enter a marker type (e.g., performance, rumor, hazard, contact):") || 'default';
+        const type = typeInput.trim().toLowerCase();
+    
         const icon = getMarkerStyle(type);
         const latlng = e.layer.getLatLng();
         const marker = L.marker(latlng, { icon });
-
-        if (label) marker.bindPopup(label);
-
-        // Store marker data as GeoJSON feature for export
+    
+        if (label.trim() !== '') marker.bindPopup(label);
+    
         marker.feature = {
           type: 'Feature',
           properties: {
@@ -98,7 +98,7 @@
             coordinates: [latlng.lng, latlng.lat]
           }
         };
-
+    
         drawnItems.addLayer(marker);
       } else {
         drawnItems.addLayer(e.layer);
