@@ -4,10 +4,10 @@
   <title>Victorian London Map (Interactive)</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
-  
+
   <style>
     html, body, #map { height: 100%; margin: 0; padding: 0; }
     .leaflet-top.leaflet-right { top: 70px; }
@@ -35,7 +35,6 @@
   <script>
     const map = L.map('map').setView([51.5074, -0.1278], 13);
 
-    // Load MapTiler historic tiles using your valid API key
     L.tileLayer('https://api.maptiler.com/tiles/uk-osgb10k1888/{z}/{x}/{y}.jpg?key=r0HKkxDJMfqlCVzaro7d', {
       tileSize: 256,
       minZoom: 0,
@@ -43,7 +42,6 @@
       attribution: '&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> &copy; <a href="https://maps.nls.uk/">NLS</a>'
     }).addTo(map);
 
-    // Drawing tools and feature group
     const drawnItems = new L.FeatureGroup();
     map.addLayer(drawnItems);
 
@@ -61,13 +59,34 @@
     map.addControl(drawControl);
 
     map.on(L.Draw.Event.CREATED, e => {
-      drawnItems.addLayer(e.layer);
+      const layer = e.layer;
+
+      if (e.layerType === 'marker') {
+        const label = prompt("Enter a label or description for this marker:");
+        if (label) {
+          layer.bindPopup(label);
+        }
+      }
+
+      drawnItems.addLayer(layer);
     });
 
-    // Export function
     function exportGeoJSON() {
-      const data = drawnItems.toGeoJSON();
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const json = drawnItems.toGeoJSON();
+
+      // Inject popup content from each layer (if any)
+      json.features.forEach(f => {
+        const layer = drawnItems.getLayers().find(l =>
+          l.getLatLng &&
+          l.getLatLng().lat === f.geometry.coordinates[1] &&
+          l.getLatLng().lng === f.geometry.coordinates[0]
+        );
+        if (layer && layer.getPopup()) {
+          f.properties.popupContent = layer.getPopup().getContent();
+        }
+      });
+
+      const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -76,12 +95,20 @@
       URL.revokeObjectURL(url);
     }
 
-    // Try to load existing data.geojson
+    // Load saved data.geojson if available
     fetch('data.geojson')
       .then(response => response.ok ? response.json() : null)
       .then(data => {
         if (data) {
-          L.geoJSON(data).eachLayer(layer => drawnItems.addLayer(layer));
+          L.geoJSON(data, {
+            onEachFeature: (feature, layer) => {
+              if (feature.geometry.type === 'Point' &&
+                  feature.properties &&
+                  feature.properties.popupContent) {
+                layer.bindPopup(feature.properties.popupContent);
+              }
+            }
+          }).eachLayer(layer => drawnItems.addLayer(layer));
         }
       });
   </script>
