@@ -87,8 +87,9 @@
 
     L.control.scale({ metric: true, imperial: false, maxWidth: 200 }).addTo(map);
 
-    const publicMarkers = L.layerGroup().addTo(map);
-    const privateMarkers = L.layerGroup();
+    const publicMarkers = new L.FeatureGroup().addTo(map);
+    const privateMarkers = new L.FeatureGroup();
+
     if (isOwner) privateMarkers.addTo(map);
 
     const drawControl = new L.Control.Draw({
