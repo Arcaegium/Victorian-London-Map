@@ -37,7 +37,6 @@
       font-size: 18px;
       line-height: 22px;
     }
-    
   </style>
 </head>
 <body>
@@ -61,20 +60,22 @@
   <script src="https://unpkg.com/leaflet.awesome-markers@2.0.4/dist/leaflet.awesome-markers.js"></script>
   <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/leaflet-measure@3.3.0/dist/leaflet-measure.min.js"></script>
-  
+
   <script>
     const map = L.map('map').setView([51.5074, -0.1278], 13);
-    L.control.measure({
-      primaryLengthUnit: 'meters',
-      secondaryLengthUnit: 'kilometers',
-      activeColor: '#ABE67E',
-      completedColor: '#C8F2BE'
-    }).addTo(map);
+
     L.tileLayer('https://api.maptiler.com/tiles/uk-osgb10k1888/{z}/{x}/{y}.jpg?key=r0HKkxDJMfqlCVzaro7d', {
       tileSize: 256,
       minZoom: 0,
       maxZoom: 18,
       attribution: '&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> &copy; <a href="https://maps.nls.uk/">NLS</a>'
+    }).addTo(map);
+
+    L.control.measure({
+      primaryLengthUnit: 'meters',
+      secondaryLengthUnit: 'kilometers',
+      activeColor: '#ABE67E',
+      completedColor: '#C8F2BE'
     }).addTo(map);
 
     const drawnItems = new L.FeatureGroup();
@@ -104,65 +105,49 @@
       'mechaniques':   { icon: 'cogs', markerColor: 'cadetblue' },
       'performance site': { icon: 'star', markerColor: 'green' },
       'rumor mill':    { icon: 'comments-o', markerColor: 'orange' },
-      'ward':      { icon: 'shield', markerColor: 'darkred' }
+      'ward':          { icon: 'shield', markerColor: 'darkred' }
     };
 
     function getMarkerStyle(type) {
       const key = (type || '').toLowerCase().trim();
       const def = { icon: 'map-marker', markerColor: 'cadetblue' };
-      console.log("getMarkerStyle input:", key, "resolved style:", markerStyles[key]);
       const style = markerStyles[key];
-      if (!style) {
-        console.warn(`Unknown marker type: '${key}' — falling back to default style.`);
-      }
-      console.log("getMarkerStyle final:", {
-        key,
-        style,
-        hasIcon: style?.hasOwnProperty('icon') ?? false
-      });
-      console.log(
-        "Resolved icon:",
-        style?.icon ?? def.icon,
-        "Resolved color:",
-        style?.markerColor ?? def.markerColor
-      );
-
       return L.AwesomeMarkers.icon({ ...(style || def), prefix: 'fa' });
     }
 
     map.on(L.Draw.Event.CREATED, e => {
-  if (e.layerType === 'marker') {
-    const typeSelector = document.getElementById('typeSelector');
-    if (!typeSelector || !typeSelector.value.trim()) {
-      alert("You must select a marker type before placing it.");
-      return;
-    }
+      if (e.layerType === 'marker') {
+        const typeSelector = document.getElementById('typeSelector');
+        if (!typeSelector || !typeSelector.value.trim()) {
+          alert("You must select a marker type before placing it.");
+          return;
+        }
 
-    const label = prompt("Enter a label or description for this marker:") || '';
-    const type = typeSelector.value.trim().toLowerCase();
-    const icon = getMarkerStyle(type);
-    const latlng = e.layer.getLatLng();
-    const marker = L.marker(latlng, { icon });
+        const label = prompt("Enter a label or description for this marker:") || '';
+        const type = typeSelector.value.trim().toLowerCase();
+        const icon = getMarkerStyle(type);
+        const latlng = e.layer.getLatLng();
+        const marker = L.marker(latlng, { icon });
 
-    if (label.trim() !== '') marker.bindPopup(label);
+        if (label.trim() !== '') marker.bindPopup(label);
 
-    marker.feature = {
-      type: 'Feature',
-      properties: {
-        popupContent: label,
-        markerType: type
-      },
-      geometry: {
-        type: 'Point',
-        coordinates: [latlng.lng, latlng.lat]
+        marker.feature = {
+          type: 'Feature',
+          properties: {
+            popupContent: label,
+            markerType: type
+          },
+          geometry: {
+            type: 'Point',
+            coordinates: [latlng.lng, latlng.lat]
+          }
+        };
+
+        drawnItems.addLayer(marker);
+      } else {
+        drawnItems.addLayer(e.layer);
       }
-    };
-
-    drawnItems.addLayer(marker);
-  } else {
-    drawnItems.addLayer(e.layer);
-  }
-});
+    });
 
     function exportGeoJSON() {
       const json = drawnItems.toGeoJSON();
