@@ -96,14 +96,14 @@
 
     function getMarkerStyle(type) {
       const def = { icon: 'map-marker', markerColor: 'cadetblue' };
-      const style = markerStyles[type.toLowerCase()] || def;
+      const style = markerStyles[(type || '').toLowerCase()] || def;
       return L.AwesomeMarkers.icon({ ...style, prefix: 'fa' });
     }
 
     map.on(L.Draw.Event.CREATED, e => {
       if (e.layerType === 'marker') {
         const label = prompt("Enter a label or description for this marker:") || '';
-        const type = document.getElementById('typeSelector').value;
+        const type = document.getElementById('typeSelector').value.toLowerCase();
         const icon = getMarkerStyle(type);
         const latlng = e.layer.getLatLng();
         const marker = L.marker(latlng, { icon });
@@ -160,7 +160,7 @@
         if (data) {
           L.geoJSON(data, {
             pointToLayer: (feature, latlng) => {
-              const icon = getMarkerStyle(feature.properties.markerType || "default");
+              const icon = getMarkerStyle((feature.properties.markerType || "default").toLowerCase());
               const marker = L.marker(latlng, { icon });
               if (feature.properties && feature.properties.popupContent) {
                 marker.bindPopup(feature.properties.popupContent);
