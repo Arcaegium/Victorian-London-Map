@@ -76,14 +76,19 @@
 
       // Inject popup content from each layer (if any)
       json.features.forEach(f => {
-        const layer = drawnItems.getLayers().find(l =>
-          l.getLatLng &&
-          l.getLatLng().lat === f.geometry.coordinates[1] &&
-          l.getLatLng().lng === f.geometry.coordinates[0]
-        );
-        if (layer && layer.getPopup()) {
-          f.properties.popupContent = layer.getPopup().getContent();
-        }
+        drawnItems.eachLayer(layer => {
+          if (layer instanceof L.Marker) {
+            const latlng = layer.getLatLng();
+            const [lng, lat] = f.geometry.coordinates;
+            const samePoint =
+              Math.abs(latlng.lat - lat) < 0.00001 &&
+              Math.abs(latlng.lng - lng) < 0.00001;
+      
+            if (samePoint && layer.getPopup()) {
+              f.properties.popupContent = layer.getPopup().getContent();
+            }
+          }
+        });
       });
 
       const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
