@@ -32,12 +32,16 @@
       padding: 5px;
       font-size: 14px;
     }
-    .leaflet-div-icon i {
-      font-size: 16px !important;
-      line-height: 20px !important;
+    .awesome-marker i {
+      font-size: 18px;
+      line-height: 22px;
     }
+    
     .awesome-marker {
-      font-size: 20px !important;
+      width: 32px;
+      height: 42px;
+      text-align: center;
+      line-height: 42px;
     }
   </style>
 </head>
@@ -61,7 +65,7 @@
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet.awesome-markers@2.0.4/dist/leaflet.awesome-markers.js"></script>
   <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
-
+  
   <script>
     const map = L.map('map').setView([51.5074, -0.1278], 13);
     L.tileLayer('https://api.maptiler.com/tiles/uk-osgb10k1888/{z}/{x}/{y}.jpg?key=r0HKkxDJMfqlCVzaro7d', {
