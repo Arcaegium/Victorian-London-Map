@@ -78,29 +78,39 @@
 
   <script>
     const isOwner = new URLSearchParams(window.location.search).get('mode') === 'owner';
-    const map = L.map('map').setView([51.5074, -0.1278], 13);
+    const map = L.map('map', {
+      center: [51.5074, -0.1278],
+      zoom: 13,
+      layers: []
+    });
+
+    // Add fallback layer first
+    const fallbackLayer = L.tileLayer('https://geo.nls.uk/mapdata2/os/6_inch_gb/{z}/{x}/{y}.png', {
+      minZoom: 12,
+      maxZoom: 17,
+      attribution: '&copy; <a href="https://maps.nls.uk/">National Library of Scotland</a>'
+    }).addTo(map);
+
+    // Add primary layer on top
+    const primaryLayer = L.tileLayer('https://geo.nls.uk/mapdata2/os/25_inch/london/{z}/{x}/{y}.png', {
+      minZoom: 12,
+      maxZoom: 18,
+      attribution: ''
+    }).addTo(map);
 
     if (isOwner) {
       document.getElementById('ownerControls').style.display = 'block';
     }
 
-    L.tileLayer('https://api.maptiler.com/tiles/uk-osgb10k1888/{z}/{x}/{y}.jpg?key=r0HKkxDJMfqlCVzaro7d', {
-      tileSize: 256,
-      minZoom: 0,
-      maxZoom: 18,
-      attribution: '&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> &copy; <a href="https://maps.nls.uk/">NLS</a>'
-    }).addTo(map);
-
     L.control.scale({ metric: true, imperial: false, maxWidth: 200 }).addTo(map);
 
     const publicMarkers = new L.FeatureGroup().addTo(map);
     const privateMarkers = new L.FeatureGroup();
-
     if (isOwner) privateMarkers.addTo(map);
 
     const drawControl = new L.Control.Draw({
       edit: {
-        featureGroup: publicMarkers, // or change this if you want to allow edits on both groups
+        featureGroup: publicMarkers,
         edit: isOwner
       },
       draw: {
@@ -120,17 +130,17 @@
     }).addTo(map);
 
     const markerStyles = {
-      'alchemicals':   { icon: 'flask', markerColor: 'cadetblue' },
-      'campsite':      { icon: 'home', markerColor: 'blue' },
-      'concern':       { icon: 'exclamation-triangle', markerColor: 'red' },
-      'contact':       { icon: 'user', markerColor: 'purple' },
-      'district':      { icon: 'flag-o', markerColor: 'darkgreen' },
-      'doctor':        { icon: 'plus-square', markerColor: 'purple' },
-      'electriques':   { icon: 'tachometer', markerColor: 'cadetblue' },
-      'mechaniques':   { icon: 'cogs', markerColor: 'cadetblue' },
+      'alchemicals': { icon: 'flask', markerColor: 'cadetblue' },
+      'campsite': { icon: 'home', markerColor: 'blue' },
+      'concern': { icon: 'exclamation-triangle', markerColor: 'red' },
+      'contact': { icon: 'user', markerColor: 'purple' },
+      'district': { icon: 'flag-o', markerColor: 'darkgreen' },
+      'doctor': { icon: 'plus-square', markerColor: 'purple' },
+      'electriques': { icon: 'tachometer', markerColor: 'cadetblue' },
+      'mechaniques': { icon: 'cogs', markerColor: 'cadetblue' },
       'performance site': { icon: 'star', markerColor: 'green' },
-      'rumor mill':    { icon: 'comments-o', markerColor: 'orange' },
-      'ward':          { icon: 'shield', markerColor: 'darkred' }
+      'rumor mill': { icon: 'comments-o', markerColor: 'orange' },
+      'ward': { icon: 'shield', markerColor: 'darkred' }
     };
 
     function getMarkerStyle(type) {
@@ -166,90 +176,83 @@
 
     if (isOwner) {
       privateMarkers.eachLayer(layer => {
-       layer.on('contextmenu', () => {
+        layer.on('contextmenu', () => {
           const currentLabel = layer.getPopup()?.getContent() || '';
           const newLabel = prompt('Edit label before publishing:', currentLabel);
           if (newLabel === null) return;
-        
           if (newLabel.trim()) {
             layer.bindPopup(newLabel.trim());
             layer.feature.properties.popupContent = newLabel.trim();
           }
-        
           privateMarkers.removeLayer(layer);
           publicMarkers.addLayer(layer);
           layer.feature.properties.visibility = 'public';
         });
       });
-      
     }
-    
-function exportGeoJSON() {
-  const allMarkers = new L.FeatureGroup();
-  publicMarkers.eachLayer(layer => {
-    if (layer instanceof L.Marker && layer.feature) {
-      allMarkers.addLayer(layer);
-    }
-  });
-  privateMarkers.eachLayer(layer => {
-    if (layer instanceof L.Marker && layer.feature) {
-      allMarkers.addLayer(layer);
-    }
-  });
-  const json = allMarkers.toGeoJSON();
-  const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = 'data.geojson';
-  link.click();
-  URL.revokeObjectURL(url);
-}
 
-fetch('data.geojson')
-  .then(response => response.ok ? response.json() : null)
-  .then(data => {
-    if (data) {
-      L.geoJSON(data, {
-        pointToLayer: (feature, latlng) => {
-          const visibility = feature.properties?.visibility || 'public';
-          const isPrivate = visibility === 'private';
-          if (isPrivate && !isOwner) return null;
-
-          const icon = getMarkerStyle((feature.properties.markerType || 'default').toLowerCase());
-          const marker = L.marker(latlng, { icon });
-          if (feature.properties?.popupContent) marker.bindPopup(feature.properties.popupContent);
-          marker.feature = feature;
-          return marker;
-        }
-      }).eachLayer(layer => {
-        const isPrivate = layer.feature?.properties?.visibility === 'private';
-
-        if (isPrivate) {
-          privateMarkers.addLayer(layer);
-
-          if (isOwner) {
-            layer.on('click', () => {
-              const currentLabel = layer.getPopup()?.getContent() || '';
-              const newLabel = prompt('Edit label before publishing:', currentLabel);
-              if (newLabel === null) return;
-
-              if (newLabel.trim()) {
-                layer.bindPopup(newLabel.trim());
-                layer.feature.properties.popupContent = newLabel.trim();
-              }
-
-              privateMarkers.removeLayer(layer);
-              publicMarkers.addLayer(layer);
-              layer.feature.properties.visibility = 'public';
-            });
-          }
-        } else {
-          publicMarkers.addLayer(layer);
+    function exportGeoJSON() {
+      const allMarkers = new L.FeatureGroup();
+      publicMarkers.eachLayer(layer => {
+        if (layer instanceof L.Marker && layer.feature) {
+          allMarkers.addLayer(layer);
         }
       });
+      privateMarkers.eachLayer(layer => {
+        if (layer instanceof L.Marker && layer.feature) {
+          allMarkers.addLayer(layer);
+        }
+      });
+      const json = allMarkers.toGeoJSON();
+      const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'data.geojson';
+      link.click();
+      URL.revokeObjectURL(url);
     }
-  });
+
+    fetch('data.geojson')
+      .then(response => response.ok ? response.json() : null)
+      .then(data => {
+        if (data) {
+          L.geoJSON(data, {
+            pointToLayer: (feature, latlng) => {
+              const visibility = feature.properties?.visibility || 'public';
+              const isPrivate = visibility === 'private';
+              if (isPrivate && !isOwner) return null;
+
+              const icon = getMarkerStyle((feature.properties.markerType || 'default').toLowerCase());
+              const marker = L.marker(latlng, { icon });
+              if (feature.properties?.popupContent) marker.bindPopup(feature.properties.popupContent);
+              marker.feature = feature;
+              return marker;
+            }
+          }).eachLayer(layer => {
+            const isPrivate = layer.feature?.properties?.visibility === 'private';
+
+            if (isPrivate) {
+              privateMarkers.addLayer(layer);
+              if (isOwner) {
+                layer.on('click', () => {
+                  const currentLabel = layer.getPopup()?.getContent() || '';
+                  const newLabel = prompt('Edit label before publishing:', currentLabel);
+                  if (newLabel === null) return;
+                  if (newLabel.trim()) {
+                    layer.bindPopup(newLabel.trim());
+                    layer.feature.properties.popupContent = newLabel.trim();
+                  }
+                  privateMarkers.removeLayer(layer);
+                  publicMarkers.addLayer(layer);
+                  layer.feature.properties.visibility = 'public';
+                });
+              }
+            } else {
+              publicMarkers.addLayer(layer);
+            }
+          });
+      });
 
     const legend = L.control({ position: 'bottomright' });
     legend.onAdd = function () {
