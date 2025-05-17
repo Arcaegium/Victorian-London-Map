@@ -77,17 +77,21 @@
   <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
 
   <script>
-    const isOwner = new URLSearchParams(window.location.search).get('mode') === 'owner';
-    const map = L.map('map').setView([51.5074, -0.1278], 13);
-  
-    // Prompt user for API key if not already saved
-    let maptilerKey = localStorage.getItem('maptilerKey');
+    const urlParams = new URLSearchParams(window.location.search);
+    let maptilerKey = urlParams.get('key') || localStorage.getItem('maptilerKey');
+    
+    const isOwner = maptilerKey === 'r0HKkxDJMfqlCVzaro7d';
+    
     if (!maptilerKey) {
       maptilerKey = prompt('Enter your MapTiler API key:');
-      if (maptilerKey) localStorage.setItem('maptilerKey', maptilerKey);
+      if (maptilerKey) {
+        localStorage.setItem('maptilerKey', maptilerKey);
+        window.location.search = `?key=${maptilerKey}`;
+      }
     }
-  
-    // Add MapTiler base layer using provided key
+    
+    const map = L.map('map').setView([51.5074, -0.1278], 13);
+    
     const baseLayer = L.tileLayer(`https://api.maptiler.com/tiles/uk-osgb10k1888/{z}/{x}/{y}.jpg?key=${maptilerKey}`, {
       tileSize: 256,
       minZoom: 0,
