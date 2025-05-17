@@ -95,9 +95,23 @@
     const primaryLayer = L.tileLayer('https://geo.nls.uk/mapdata2/os/25_inch/london/{z}/{x}/{y}.png', {
       minZoom: 12,
       maxZoom: 18,
-      attribution: ''
+      attribution: '&copy; <a href="https://maps.nls.uk/">National Library of Scotland</a>'
     }).addTo(map);
 
+  const tileCache = new Set();
+
+  primaryLayer.on('tileerror', function (e) {
+    const coords = e.coords;
+    const key = `${coords.z}/${coords.x}/${coords.y}`;
+    if (!tileCache.has(key)) {
+      tileCache.add(key);
+      const img = e.tile;
+      fallbackLayer.createTile(coords, function (fallbackTile) {
+        img.src = fallbackTile.src;
+      });
+    }
+  });
+    
     if (isOwner) {
       document.getElementById('ownerControls').style.display = 'block';
     }
