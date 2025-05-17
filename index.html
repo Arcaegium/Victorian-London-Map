@@ -78,40 +78,16 @@
 
   <script>
     const isOwner = new URLSearchParams(window.location.search).get('mode') === 'owner';
-    const map = L.map('map', {
-      center: [51.5074, -0.1278],
-      zoom: 13,
-      layers: []
-    });
+    const map = L.map('map').setView([51.5074, -0.1278], 13);
 
-    // Add fallback layer first
-    const fallbackLayer = L.tileLayer('https://geo.nls.uk/mapdata2/os/6_inch_gb/{z}/{x}/{y}.png', {
-      minZoom: 12,
-      maxZoom: 17,
-      attribution: '&copy; <a href="https://maps.nls.uk/">National Library of Scotland</a>'
-    }).addTo(map);
-
-    // Add primary layer on top
-    const primaryLayer = L.tileLayer('https://geo.nls.uk/mapdata2/os/25_inch/london/{z}/{x}/{y}.png', {
-      minZoom: 12,
+    // MapTiler 1888 OS Map Layer
+    const baseLayer = L.tileLayer('https://api.maptiler.com/tiles/uk-osgb10k1888/{z}/{x}/{y}.jpg?key=r0HKkxDJMfqlCVzaro7d', {
+      tileSize: 256,
+      minZoom: 0,
       maxZoom: 18,
-      attribution: '&copy; <a href="https://maps.nls.uk/">National Library of Scotland</a>'
+      attribution: '&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> &copy; <a href="https://maps.nls.uk/">NLS</a>'
     }).addTo(map);
 
-  const tileCache = new Set();
-
-  primaryLayer.on('tileerror', function (e) {
-    const coords = e.coords;
-    const key = `${coords.z}/${coords.x}/${coords.y}`;
-    if (!tileCache.has(key)) {
-      tileCache.add(key);
-      const img = e.tile;
-      fallbackLayer.createTile(coords, function (fallbackTile) {
-        img.src = fallbackTile.src;
-      });
-    }
-  });
-    
     if (isOwner) {
       document.getElementById('ownerControls').style.display = 'block';
     }
