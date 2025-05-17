@@ -79,15 +79,22 @@
   <script>
     const isOwner = new URLSearchParams(window.location.search).get('mode') === 'owner';
     const map = L.map('map').setView([51.5074, -0.1278], 13);
-
-    // MapTiler 1888 OS Map Layer
-    const baseLayer = L.tileLayer('https://api.maptiler.com/tiles/uk-osgb10k1888/{z}/{x}/{y}.jpg?key=r0HKkxDJMfqlCVzaro7d', {
+  
+    // Prompt user for API key if not already saved
+    let maptilerKey = localStorage.getItem('maptilerKey');
+    if (!maptilerKey) {
+      maptilerKey = prompt('Enter your MapTiler API key:');
+      if (maptilerKey) localStorage.setItem('maptilerKey', maptilerKey);
+    }
+  
+    // Add MapTiler base layer using provided key
+    const baseLayer = L.tileLayer(`https://api.maptiler.com/tiles/uk-osgb10k1888/{z}/{x}/{y}.jpg?key=${maptilerKey}`, {
       tileSize: 256,
       minZoom: 0,
       maxZoom: 18,
       attribution: '&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> &copy; <a href="https://maps.nls.uk/">NLS</a>'
     }).addTo(map);
-
+  
     if (isOwner) {
       document.getElementById('ownerControls').style.display = 'block';
     }
